@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=Tigerstop
+Icon=/home/pi/Pictures/Tigerstop_logo.jpeg
+Exec=python3 /home/pi/Desktop/Python_code/Tigerstop_dev.py
+Terminal=False
