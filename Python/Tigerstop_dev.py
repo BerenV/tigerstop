@@ -33,8 +33,8 @@ seekFlag = 0
 #successfully removed all dependency on cutlist
 
 # Initiate serial ports
-calipers = Serial('/dev/ttyUSB1', 9600)
-tigerstop = Serial('/dev/ttyUSB0',9600)
+calipers = Serial('/dev/ttyUSB0', 9600)
+tigerstop = Serial('/dev/ttyUSB1',9600)
 # I think this increments each time and can be tough to chase down
 # TODO auto detect which serial port is which device
 
@@ -191,8 +191,8 @@ def updateLabelData(data):
         except ValueError:
             pass
     if bool(l):
-        Lb.insert(END, float(data)) #float(data) turned out to do it, don't need all that above
-        print(float(data))
+        Lb.insert(END, float(l[0]))
+        print(float(l[0]))
     tch.update_idletasks()
 
 # Initiate ReaderThread
@@ -200,3 +200,4 @@ reader = ReaderThread(calipers, SerialReaderProtocolRaw)
 # Start reader
 reader.start()
 tk.mainloop()
+
