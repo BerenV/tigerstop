@@ -1,1 +1,1 @@
-# tigerstop
+# Tigerstop cutlist GUI written in Python
