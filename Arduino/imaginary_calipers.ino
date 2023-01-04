@@ -4,8 +4,8 @@
 void setup() {
   Serial.begin(9600);
   randomSeed(analogRead(0));
-  //Serial.println("   0.966              2");
-  Serial.println("   0.966");
+  Serial.println("   0.966              2");
+  //Serial.println("   0.966");
   pinMode(13, OUTPUT);
   pinMode(2,INPUT_PULLUP);
 }
@@ -43,5 +43,5 @@ void printReading() {
   Serial.print(ran);
   ran=random(0,9);
   Serial.println(ran);
-  //Serial.println("              2");
+  Serial.println("              2");
 }
