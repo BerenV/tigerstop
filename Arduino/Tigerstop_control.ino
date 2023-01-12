@@ -13,9 +13,9 @@ float px; // location
 const int LEDpin = 13;  // bright blue status LED to indicate when buttons are being manipulated
 
 // FIXME change these to the minimum required values in order to maximize speed
-const int holdTime = 75; // time to hold button down, in milliseconds
-const int pauseTime = 50; // time to wait before pressing the next one
-const int waitBetweenMoves = 800; // makes sure it's been at least this long
+const int holdTime = 40; // time to hold button down, in milliseconds
+const int pauseTime = 40; // time to wait before pressing the next one
+const int waitBetweenMoves = 500; // makes sure it's been at least this long
 
 long lastMoveTime = 0;
 //             {    rows       } {     columns    }
@@ -95,7 +95,7 @@ void loop() {
 
 void goTo(float pos) {
   long xthousand = pos * 1000;
-  Serial.println(xthousand);
+  //Serial.println(xthousand);
   //  // this is going to be a really dumb way of doing it but I'm in a hurry...
   //  if (pos >= 100 && pos <= 125) {
   //    pressButton('1'); // all we need
@@ -120,14 +120,14 @@ void goTo(float pos) {
   int tensDigit = (xthousand / 10000) % 10;
   int hundredsDigit = (xthousand / 100000) % 10;
 
-  Serial.print(hundredsDigit);
-  Serial.print(tensDigit);
-  Serial.print(onesDigit);
-  Serial.print(".");
-  Serial.print(tenthsDigit);
-  Serial.print(hundrethsDigit);
-  Serial.print(thousanthsDigit);
-  Serial.println();
+//  Serial.print(hundredsDigit);
+//  Serial.print(tensDigit);
+//  Serial.print(onesDigit);
+//  Serial.print(".");
+//  Serial.print(tenthsDigit);
+//  Serial.print(hundrethsDigit);
+//  Serial.print(thousanthsDigit);
+//  Serial.println();
 
 //  int a = 1; // example of converting int to char!
 //  char b[2];
@@ -156,7 +156,11 @@ void goTo(float pos) {
 //    temp_str.toCharArray(tempChar, 2);
 //    pressButton(tempChar);
 
-  //pressInt(hundredsDigit); // we don't need readings over 100
+  //pressButton("Stop");
+  //delay(500); // extra special delay
+  pressButton("0");
+  pressButton("0");
+  pressInt(hundredsDigit); // we don't need readings over 100
   pressInt(tensDigit);
   pressInt(onesDigit);
   pressButton("."); // decimal
@@ -205,11 +209,11 @@ void pressInt(int digit) {
 void processCommand() {
   GCode.ParseLine();
   // Code to process the line of G-Code here…
-  Serial.print("Command Line: ");
-  Serial.println(GCode.line);
+  //Serial.print("Command Line: ");
+  //Serial.println(GCode.line);
   GCode.RemoveCommentSeparators();
-  Serial.print("Comment(s): ");
-  Serial.println(GCode.comments);
+  //Serial.print("Comment(s): ");
+  //Serial.println(GCode.comments);
 
   if (GCode.HasWord('G'))
   {
@@ -231,12 +235,17 @@ void processCommand() {
     if (millis() < (lastMoveTime + waitBetweenMoves)) {
       delay(waitBetweenMoves); 
       // ensure that it's definitely been long enough
-      goTo(GCode.GetWordValue('X'));
-      lastMoveTime = millis();
+      if (GCode.GetWordValue('X') > 4) {
+        goTo(GCode.GetWordValue('X'));
+        lastMoveTime = millis();
+      }
+      
     }
     else { // start typing directly
-      goTo(GCode.GetWordValue('X'));
-      lastMoveTime = millis();
+      if (GCode.GetWordValue('X') > 4) {
+        goTo(GCode.GetWordValue('X'));
+        lastMoveTime = millis();
+      }
     }
   }
 }
@@ -255,8 +264,8 @@ void buildHashMaps() {
 
 void pressButton(char* button) {
   // TODO remove this debugging printout
-  Serial.print("*");
-  Serial.println(button);
+//  Serial.print("*");
+//  Serial.println(button);
   int a = xPins.getValueOf(button); // gets physical pin values from array
   int b = yPins.getValueOf(button);
   digitalWrite(LEDpin, HIGH);
