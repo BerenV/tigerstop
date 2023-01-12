@@ -13,9 +13,11 @@ float px; // location
 const int LEDpin = 13;  // bright blue status LED to indicate when buttons are being manipulated
 
 // FIXME change these to the minimum required values in order to maximize speed
-const int holdTime = 30; // time to hold button down, in milliseconds
+const int holdTime = 75; // time to hold button down, in milliseconds
 const int pauseTime = 50; // time to wait before pressing the next one
+const int waitBetweenMoves = 800; // makes sure it's been at least this long
 
+long lastMoveTime = 0;
 //             {    rows       } {     columns    }
 //              0  1  2  3  4  5  6   7   8   9
 int pins [10] { 2, 3, 4, 5, 6, 7, A0, A1, A2, A3 };
@@ -154,7 +156,7 @@ void goTo(float pos) {
 //    temp_str.toCharArray(tempChar, 2);
 //    pressButton(tempChar);
 
-  pressInt(hundredsDigit);
+  //pressInt(hundredsDigit); // we don't need readings over 100
   pressInt(tensDigit);
   pressInt(onesDigit);
   pressButton("."); // decimal
@@ -165,7 +167,7 @@ void goTo(float pos) {
 }
 
 void pressInt(int digit) {
-  // this is the last straw
+  // this is the last straw, I'll just use a switch case
   switch (digit) {
     case 1:
       pressButton("1");
@@ -226,7 +228,16 @@ void processCommand() {
   {
     //Serial.print("Process X code: ");
     //Serial.println((float)GCode.GetWordValue('X'));
-    goTo(GCode.GetWordValue('X'));
+    if (millis() < (lastMoveTime + waitBetweenMoves)) {
+      delay(waitBetweenMoves); 
+      // ensure that it's definitely been long enough
+      goTo(GCode.GetWordValue('X'));
+      lastMoveTime = millis();
+    }
+    else { // start typing directly
+      goTo(GCode.GetWordValue('X'));
+      lastMoveTime = millis();
+    }
   }
 }
 
