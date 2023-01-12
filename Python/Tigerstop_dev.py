@@ -65,7 +65,7 @@ def moveNext():
         print("error")
         updateLb()
         goButton["text"]="Done!"
-        nextButton["text"]="error"
+        nextButton["text"]="end!"
 
 def goTiger():
     global index
@@ -111,7 +111,7 @@ def moveBack():
     else:
         #display error?
         print("error")
-        backButton["text"]="error"
+        backButton["text"]="end!"
         
 def updateLb():
     Lb.selection_clear(0, tk.END)
@@ -133,7 +133,7 @@ tch=tk.Tk() #"touch" window
 tch.title("Tigerstop beta control")
 tch.config(cursor="none") #uncomment for tchscreen operation (RPi only)
 #DO NOT use on Mac since it causes the window to freeze
-buttonFont=tkinter.font.Font(family='Helvetica', size = 44, weight = "bold")
+buttonFont=tkinter.font.Font(family='Helvetica', size = 46, weight = "bold")
 
 goButton=tk.Button(tch, text='Go', font=buttonFont, command=goTiger, bg='green', activebackground='green', height=3, width=24)
 goButton.grid(row=0, column=0, columnspan=2)
@@ -146,10 +146,10 @@ nextButton.grid(row=1, column=1)
 # yscrollbar = Scrollbar(window)
 # yscrollbar.pack(side = RIGHT, fill = Y)
 # yscrollbar.config(command = list.yview)
-listFont=tkinter.font.Font(size = 14)
+listFont=tkinter.font.Font(size = 24)
 # var=tk.Variable(value=cutlist)
 var=tk.Variable()
-Lb=tk.Listbox(tch, listvariable=var, font=listFont, height=18, width=10, selectmode=tk.SINGLE)
+Lb=tk.Listbox(tch, listvariable=var, font=listFont, height=12, width=8, selectmode=tk.SINGLE)
 Lb.grid(row=0, column=3, rowspan=2)
 #Lb.pack(padx = 10, pady = 10, expand = YES, fill = "both")
 # lst=tk.Tk() #"list" window
@@ -181,9 +181,19 @@ class SerialReaderProtocolRaw(Protocol):
     def data_received(self, data):
         """Called with snippets received from the serial port"""
         updateLabelData(data)
-
+lastDel = 0
 def updateLabelData(data):
+    global lastDel
+    time.sleep(0.1) # apparantly it needs a little time to receive all digits
     data = data.decode("utf-8")
+    print(data)
+    if re.search('[a-zA-Z]', data) and lastDel == 0: #maybe??
+        Lb.delete(END)
+        lastDel = 1
+        print("deleting last line")
+    else:
+        lastDel = 0
+    
     l = []
     for t in data.split():
         try:
@@ -191,8 +201,13 @@ def updateLabelData(data):
         except ValueError:
             pass
     if bool(l):
-        Lb.insert(END, float(l[0]))
-        print(float(l[0]))
+        print(l[0])
+        if l[0] < 1.0:
+            Lb.insert(END, "---------")
+        else:
+            Lb.insert(END, l[0])
+        lasDel = 0
+
     tch.update_idletasks()
 
 # Initiate ReaderThread
