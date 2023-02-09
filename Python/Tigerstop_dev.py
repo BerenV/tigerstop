@@ -33,8 +33,8 @@ seekFlag = 0
 #successfully removed all dependency on cutlist
 
 # Initiate serial ports
-calipers = Serial('/dev/ttyUSB0', 9600)
-tigerstop = Serial('/dev/ttyUSB1',9600)
+calipers = Serial('/dev/ttyUSB1', 9600)
+tigerstop = Serial('/dev/ttyUSB0',9600)
 # I think this increments each time and can be tough to chase down
 # TODO auto detect which serial port is which device
 
@@ -133,24 +133,25 @@ tch=tk.Tk() #"touch" window
 tch.title("Tigerstop beta control")
 tch.config(cursor="none") #uncomment for tchscreen operation (RPi only)
 #DO NOT use on Mac since it causes the window to freeze
-buttonFont=tkinter.font.Font(family='Helvetica', size = 46, weight = "bold")
+goButtonFont=tkinter.font.Font(family='Helvetica', size = 40, weight = "bold")
+buttonFont=tkinter.font.Font(family='Helvetica', size = 36, weight = "bold")
 
-goButton=tk.Button(tch, text='Go', font=buttonFont, command=goTiger, bg='green', activebackground='green', height=3, width=24)
-goButton.grid(row=0, column=0, columnspan=2)
+goButton=tk.Button(tch, text='Go', font=goButtonFont, command=goTiger, bg='green', activebackground='green', height=3, width=24)
+goButton.grid(row=0, column=0, columnspan=2, padx=14)
 backButton=tk.Button(tch, text='Back', font=buttonFont, command=moveBack, bg='red', activebackground='red', height=3, width=12)
-backButton.grid(row=1, column=0)
+backButton.grid(row=1, column=0, padx=32)
 nextButton=tk.Button(tch, text='Next', font=buttonFont, command=moveNext, bg='cyan', activebackground='cyan', height=3, width=12)
-nextButton.grid(row=1, column=1)
+nextButton.grid(row=1, column=1, padx=32)
 
 # # for scrolling vertically
 # yscrollbar = Scrollbar(window)
 # yscrollbar.pack(side = RIGHT, fill = Y)
 # yscrollbar.config(command = list.yview)
-listFont=tkinter.font.Font(size = 24)
+listFont=tkinter.font.Font(size = 28)
 # var=tk.Variable(value=cutlist)
 var=tk.Variable()
 Lb=tk.Listbox(tch, listvariable=var, font=listFont, height=12, width=8, selectmode=tk.SINGLE)
-Lb.grid(row=0, column=3, rowspan=2)
+Lb.grid(row=0, column=3, rowspan=2, padx=0, pady=10)
 #Lb.pack(padx = 10, pady = 10, expand = YES, fill = "both")
 # lst=tk.Tk() #"list" window
 # lst.title("Current cutlist contents")
@@ -215,4 +216,3 @@ reader = ReaderThread(calipers, SerialReaderProtocolRaw)
 # Start reader
 reader.start()
 tk.mainloop()
-
