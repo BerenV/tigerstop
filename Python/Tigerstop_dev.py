@@ -33,8 +33,8 @@ seekFlag = 0
 #successfully removed all dependency on cutlist
 
 # Initiate serial ports
-calipers = Serial('/dev/ttyUSB1', 9600)
-tigerstop = Serial('/dev/ttyUSB0',9600)
+calipers = Serial('/dev/ttyUSB0', 9600)
+tigerstop = Serial('/dev/ttyUSB1',9600)
 # I think this increments each time and can be tough to chase down
 # TODO auto detect which serial port is which device
 
@@ -150,7 +150,7 @@ nextButton.grid(row=1, column=1, padx=32)
 listFont=tkinter.font.Font(size = 28)
 # var=tk.Variable(value=cutlist)
 var=tk.Variable()
-Lb=tk.Listbox(tch, listvariable=var, font=listFont, height=12, width=8, selectmode=tk.SINGLE)
+Lb=tk.Listbox(tch, listvariable=var, font=listFont, height=11, width=8, selectmode=tk.SINGLE)
 Lb.grid(row=0, column=3, rowspan=2, padx=0, pady=10)
 #Lb.pack(padx = 10, pady = 10, expand = YES, fill = "both")
 # lst=tk.Tk() #"list" window
