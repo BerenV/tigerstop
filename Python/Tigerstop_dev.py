@@ -33,10 +33,23 @@ seekFlag = 0
 #successfully removed all dependency on cutlist
 
 # Initiate serial ports
-calipers = Serial('/dev/ttyUSB0', 9600)
-tigerstop = Serial('/dev/ttyUSB1',9600)
+srl0 = Serial('/dev/ttyUSB0', 9600, timeout=1)
+srl1 = Serial('/dev/ttyUSB1',9600, timeout=1)
 # I think this increments each time and can be tough to chase down
 # TODO auto detect which serial port is which device
+
+srl0.write(b'M77') # try this on for kicks
+rply = srl0.readline()
+if rply == 'Tigerstop serial interface 1.1': # expected reply from Tigerstop Uno
+    calipers = srl1
+    tigerstop = srl0
+    print('Case 0')
+else:
+    calipers = srl0
+    tigerstop = srl1
+    print('Case 1')
+# Yes I know this isn't a good solution but it's too late to be smart...
+# Need to remember to make this more sophisticated if I increase the version number
 
 
 #start GUI
