@@ -1,1 +1,5 @@
 # Tigerstop cutlist GUI written in Python
+
+Python UI based on tkinter. Still in progress with features requested.
+
+Also included Arduino code (tigerstop_control.ino) running on the Uno which is inside the control panel of the Tigerstop with a custom shield which contains 10x PC817 optocouplers. The Tigerstop's memberane keypad is scanned in a 4x6 matrix and the optocouplers can connect any of the 6 rows with the 4 columns to simulate any button press. The holdTime and pauseTime variables were experimentally determined after extensive testing and set to a conservative value that did not result in any missed numbers. Several strategies are used to increase reliablility with the most effective one being to type several zeros at the beginning. This has the drawback of taking more time, but it seems like sometimes the Tigerstop checks out for a cup of tea and doesn't poll the keypad frequently enough. I included the logic analyzer files from looking at the way the keypad is scanned, which can be opened with Pulseview.
