@@ -13,9 +13,9 @@ float px; // location
 const int LEDpin = 13;  // bright blue status LED to indicate when buttons are being manipulated
 
 // FIXME change these to the minimum required values in order to maximize speed
-const int holdTime = 40; // time to hold button down, in milliseconds
-const int pauseTime = 40; // time to wait before pressing the next one
-const int waitBetweenMoves = 500; // makes sure it's been at least this long
+const int holdTime = 30; // time to hold button down, in milliseconds
+const int pauseTime = 30; // time to wait before pressing the next one
+const int waitBetweenMoves = 1000; // makes sure it's been at least this long
 
 long lastMoveTime = 0;
 //             {    rows       } {     columns    }
@@ -158,6 +158,7 @@ void goTo(float pos) {
 
   //pressButton("Stop");
   //delay(500); // extra special delay
+  //pressButton("0");
   pressButton("0");
   pressButton("0");
   pressInt(hundredsDigit); // we don't need readings over 100
@@ -288,8 +289,8 @@ void changeCalibration(int thousanths) {
    display helpful information
 */
 void help() {
-  Serial.println(F("Tigerstop serial interface "));
-  Serial.print(VERSION);
+  Serial.print(F("Tigerstop serial interface "));
+  Serial.println(VERSION);
   Serial.println(F("Commands:"));
   Serial.println(F("G01 X[inches]; - linear move"));
   Serial.println(F("M77; - this help message"));
