@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import *
 from tkinter.messagebox import showinfo
+from tkinter.simpledialog import Dialog
 from serial import Serial
 from serial.threaded import ReaderThread, Protocol
 import tkinter.font
@@ -33,10 +34,14 @@ seekFlag = 0
 #successfully removed all dependency on cutlist
 
 # Initiate serial ports
-srl0 = Serial('/dev/ttyUSB0', 9600, timeout=1)
-srl1 = Serial('/dev/ttyUSB1',9600, timeout=1)
+#calipers = Serial('/dev/ttyUSB1', 9600)
+#tigerstop = Serial('/dev/ttyUSB0',9600)
 # I think this increments each time and can be tough to chase down
 # TODO auto detect which serial port is which device
+
+# Initiate serial ports
+srl0 = Serial('/dev/ttyUSB0', 9600, timeout=1)
+srl1 = Serial('/dev/ttyUSB1',9600, timeout=1)
 
 srl0.write(b'M77') # try this on for kicks
 rply = srl0.readline()
@@ -50,6 +55,7 @@ else:
     print('Case 1')
 # Yes I know this isn't a good solution but it's too late to be smart...
 # Need to remember to make this more sophisticated if I increase the version number
+
 
 
 #start GUI
@@ -141,7 +147,16 @@ def goTo(loc):
     #print(loc)
     tigerstop.write(bytes(('X' + str(loc) + '\n'),encoding='utf-8'))
     #send command to move over serial
+    
+def getInput():
+    while 1==1:
+        scanNumber = tk.simpledialog.askfloat('Barcode entry window', 'Scan barcode')
+        if not scanNumber: # 'Cancel'
+            return
+        else:
+            goTo(scanNumber)
 
+    
 tch=tk.Tk() #"touch" window
 tch.title("Tigerstop beta control")
 tch.config(cursor="none") #uncomment for tchscreen operation (RPi only)
@@ -149,12 +164,17 @@ tch.config(cursor="none") #uncomment for tchscreen operation (RPi only)
 goButtonFont=tkinter.font.Font(family='Helvetica', size = 40, weight = "bold")
 buttonFont=tkinter.font.Font(family='Helvetica', size = 36, weight = "bold")
 
-goButton=tk.Button(tch, text='Go', font=goButtonFont, command=goTiger, bg='green', activebackground='green', height=3, width=24)
-goButton.grid(row=0, column=0, columnspan=2, padx=14)
+goButton=tk.Button(tch, text='Go', font=goButtonFont, command=goTiger, bg='green', activebackground='green', height=3, width=12)
+goButton.grid(row=0, column=0, columnspan=1, padx=14)
 backButton=tk.Button(tch, text='Back', font=buttonFont, command=moveBack, bg='red', activebackground='red', height=3, width=12)
 backButton.grid(row=1, column=0, padx=32)
 nextButton=tk.Button(tch, text='Next', font=buttonFont, command=moveNext, bg='cyan', activebackground='cyan', height=3, width=12)
 nextButton.grid(row=1, column=1, padx=32)
+
+#scannerEntry=Entry(tch)
+#scannerEntry.grid(row=0, column=1, padx=0)
+scannerButton = tk.Button(tch, text='Barcode', font=goButtonFont, command=getInput, bg='yellow', activebackground='yellow', height=3, width=12)
+scannerButton.grid(row=0, column=1, padx=0)
 
 # # for scrolling vertically
 # yscrollbar = Scrollbar(window)
