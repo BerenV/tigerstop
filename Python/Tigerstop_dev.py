@@ -15,6 +15,9 @@ index = 0 # to keep track of place in cutlist
 lastPos = 0.0
 goFlag = 0
 seekFlag = 0
+unitFlag = 1 # gets set to 1 if someone switches units to in
+# initialize to 1 so the first time of the day sets units to mm
+
 # 
 # calipers = serial.Serial('/dev/ttyUSB1',9600)
 # time.sleep(1)
@@ -44,8 +47,8 @@ srl0 = Serial('/dev/ttyUSB0', 9600, timeout=1)
 srl1 = Serial('/dev/ttyUSB1',9600, timeout=1)
 
 srl0.write(b'M77') # try this on for kicks
-rply = srl0.readline()
-if rply == 'Tigerstop serial interface 1.1': # expected reply from Tigerstop Uno
+rply = srl0.readline() # gets first line
+if rply == 'Tigerstop serial interface 1.2': # expected reply from Tigerstop Uno
     calipers = srl1
     tigerstop = srl0
     print('Case 0')
@@ -90,6 +93,13 @@ def goTiger():
     global index
     global goFlag
     global seekFlag
+    global unitFlag
+    if unitFlag == 1:
+        changeUnitsMm()
+        time.sleep(2) # waits for unit change to happen
+        unitFlag = 0 # set to indicate it's now in mm
+    
+    
     if goFlag == 0:
         goFlag = 1
         # don't increment this first time
@@ -101,7 +111,7 @@ def goTiger():
         backButton["text"]="Back"
     elif index < (Lb.size()-1): #index < (len(cutlist)-1):
         if not bool(seekFlag):
-            index += 1 # silly python doesn't have ++ increment operator
+            index += 1 # python doesn't have ++ increment operator
         updateLb()
         goTo(Lb.get(Lb.curselection()))
 #         if lasLoc != Lb.get(Lb.curselection()):
@@ -140,11 +150,17 @@ def updateLb():
     print(Lb.get(Lb.curselection())) #not cutlist[index]
 
 def goTo(loc):
+    global unitFlag
     global lastPos
     lastPos = loc
+    if unitFlag == 1:
+        changeUnitsMm()
+        time.sleep(2) # waits for unit change to happen
+        unitFlag = 0 # set to indicate it's now in mm
+    
     #gotta remove that pesky comma from the end
     #loc = loc.rstrip(loc[-1])
-    #print(loc)
+    print(loc)
     tigerstop.write(bytes(('X' + str(loc) + '\n'),encoding='utf-8'))
     #send command to move over serial
     
@@ -154,11 +170,28 @@ def getInput():
         if not scanNumber: # 'Cancel'
             return
         else:
-            goTo(scanNumber)
+            goTo(scanNumber*25.4)
+            
+def changeUnitsIn():
+    unitFlag = 1
+    tigerstop.write(bytes(('G' + '20' + '\n'),encoding='utf-8'))
+    print("Changing units to in")
+    
+def changeUnitsMm():
+    unitFlag = 0
+    tigerstop.write(bytes(('G' + '21' + '\n'),encoding='utf-8'))
+    print("Changing units to mm")
 
+def changeCalLong():
+    tigerstop.write(bytes(('M' + '78' + '\n'),encoding='utf-8'))
+    print("Changing calibration longer")
+
+def changeCalShort():
+    tigerstop.write(bytes(('M' + '79' + '\n'),encoding='utf-8'))
+    print("Changing calibration shorter")
     
 tch=tk.Tk() #"touch" window
-tch.title("Tigerstop beta control")
+tch.title("Tigerstop control")
 tch.config(cursor="none") #uncomment for tchscreen operation (RPi only)
 #DO NOT use on Mac since it causes the window to freeze
 goButtonFont=tkinter.font.Font(family='Helvetica', size = 40, weight = "bold")
@@ -175,6 +208,19 @@ nextButton.grid(row=1, column=1, padx=32)
 #scannerEntry.grid(row=0, column=1, padx=0)
 scannerButton = tk.Button(tch, text='Barcode', font=goButtonFont, command=getInput, bg='yellow', activebackground='yellow', height=3, width=12)
 scannerButton.grid(row=0, column=1, padx=0)
+
+# attempt to add menu
+menubar = Menu(tch)
+options = Menu(menubar, tearoff = 0)
+menubar.add_cascade(label ='Options', font = ("", 20), menu = options) 
+options.add_command(label='Change units to in', font = ("", 30), command = changeUnitsIn)
+options.add_command(label='Change units to mm', font = ("", 30), command = changeUnitsMm)
+options.add_separator()
+options.add_command(label='Bump calibration LONGER', font = ("", 30), command = changeCalLong)
+options.add_command(label='Bump calibration SHORTER', font = ("", 30), command = changeCalShort)
+options.add_separator()
+options.add_command(label ='Quit', font = ("", 30), command = tch.destroy) 
+
 
 # # for scrolling vertically
 # yscrollbar = Scrollbar(window)
@@ -231,13 +277,14 @@ def updateLabelData(data):
     l = []
     for t in data.split():
         try:
-              l.append(float(t))
+            l.append(round((float(t)*25.4), 2)) # convert to mm here for now I guess
         except ValueError:
             pass
     if bool(l):
         print(l[0])
-        if l[0] < 1.0:
+        if l[0] < 25.0:
             Lb.insert(END, "---------")
+            # TODO make this include number of measurements above
         else:
             Lb.insert(END, l[0])
         lasDel = 0
@@ -248,4 +295,9 @@ def updateLabelData(data):
 reader = ReaderThread(calipers, SerialReaderProtocolRaw)
 # Start reader
 reader.start()
+
+#launch GUI window
+tch.config(menu = menubar)
 tk.mainloop()
+
+
