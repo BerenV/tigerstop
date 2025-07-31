@@ -2,14 +2,14 @@ import tkinter as tk
 from tkinter import *
 from tkinter.messagebox import showinfo
 from tkinter.simpledialog import Dialog
-from serial import Serial
+from serial import Serial # is this really needed?
 from serial.threaded import ReaderThread, Protocol
 import tkinter.font
 import time
 import serial
 import os
-
-
+import glob
+import subprocess
 
 cutlist=[]
 index = 0 # to keep track of place in cutlist
@@ -37,31 +37,101 @@ unitFlag = 1 # gets set to 1 if someone switches units to in
 #print(cutlist) #debugging
 #successfully removed all dependency on cutlist
 
-# Initiate serial ports
-calipers = Serial('/dev/ttyUSB0', 9600)
-tigerstop = Serial('/dev/ttyUSB1',9600)
-# I think this increments each time and can be tough to chase down
-# TODO auto detect which serial port is which device
+print(os.system('udevadm info $(ls /dev/ttyUSB*) | grep "DEVNAME\|ID_MODEL_ID"'))
 
-# Initiate serial ports
-srl0 = Serial('/dev/ttyUSB0', 9600, timeout=1)
-srl1 = Serial('/dev/ttyUSB1',9600, timeout=1)
- 
-srl0.write(b'M77') # Tigerstop Uno should reply with a message
-time.sleep(1)
-rply = srl0.readline() # gets first line
-if rply == 'M77': # Proscale receiver is set to echo commands
-     calipers = srl0
-     tigerstop = srl1
-     print('Case 0')
+import glob
+import subprocess
+import serial
+
+# Known USB identity for each device role
+DEVICE_CRITERIA = {
+    'calipers': {
+        'product_id': 'ea60',
+        'vendor_id': '10c4',       # Example: Silicon Labs
+        'serial':   '0001'         # Replace with actual serial if known
+    },
+    'tigerstop': {
+        'product_id': '7523',
+        'vendor_id': '1a86',
+    }
+}
+
+# Known USB identity for each device role
+DEVICE_CRITERIA = {
+    'calipers': {
+        'product_id': 'ea60',
+        'vendor_id': '10c4'   # Silicon Labs
+    },
+    'tigerstop': {
+        'product_id': '7523',
+        'vendor_id': '1a86'   # QinHeng/CH340
+    }
+}
+
+BAUDRATE = 9600
+
+def get_usb_attributes(dev_path):
+    result = subprocess.run(
+        ['udevadm', 'info', '-a', '-n', dev_path],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        return None
+
+    vendor_id = product_id = None
+
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if 'ATTRS{idVendor}' in line and vendor_id is None:
+            vendor_id = line.split('==')[1].strip().strip('"').lower()
+        elif 'ATTRS{idProduct}' in line and product_id is None:
+            product_id = line.split('==')[1].strip().strip('"').lower()
+
+        if vendor_id and product_id:
+            break
+
+    return {
+        'vendor_id': vendor_id,
+        'product_id': product_id
+    }
+
+def match_device(info, criteria):
+    if not info:
+        return False
+    return (
+        info['vendor_id'] == criteria.get('vendor_id', '').lower() and
+        info['product_id'] == criteria.get('product_id', '').lower()
+    )
+
+def find_serial_ports_by_identity():
+    ports = glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
+    assigned_ports = {}
+
+    for port in ports:
+        info = get_usb_attributes(port)
+        for role, criteria in DEVICE_CRITERIA.items():
+            if role not in assigned_ports and match_device(info, criteria):
+                assigned_ports[role] = port
+                break
+
+    return assigned_ports
+
+# --- Main execution ---
+assigned_ports = find_serial_ports_by_identity()
+
+if 'calipers' not in assigned_ports or 'tigerstop' not in assigned_ports:
+    print("Error: One or both devices not found.")
+    print("Found:", assigned_ports)
 else:
-     calipers = srl1
-     tigerstop = srl0
-     print('Case 1')
+    # Open serial ports
+    calipers = serial.Serial(assigned_ports['calipers'], BAUDRATE)
+    tigerstop = serial.Serial(assigned_ports['tigerstop'], BAUDRATE)
+
+    print(f"Calipers connected on {calipers.port}")
+    print(f"Tigerstop connected on {tigerstop.port}")
 
 
-calipers = srl1
-tigerstop = srl0
+
 #start GUI
 #for i in range(len(cutlist)):
 #   Lb.insert(i, cutlist[i])
