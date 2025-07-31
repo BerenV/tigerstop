@@ -7,6 +7,7 @@ from serial.threaded import ReaderThread, Protocol
 import tkinter.font
 import time
 import serial
+import os
 
 
 
@@ -37,34 +38,36 @@ unitFlag = 1 # gets set to 1 if someone switches units to in
 #successfully removed all dependency on cutlist
 
 # Initiate serial ports
-#calipers = Serial('/dev/ttyUSB1', 9600)
-#tigerstop = Serial('/dev/ttyUSB0',9600)
+calipers = Serial('/dev/ttyUSB0', 9600)
+tigerstop = Serial('/dev/ttyUSB1',9600)
 # I think this increments each time and can be tough to chase down
 # TODO auto detect which serial port is which device
 
 # Initiate serial ports
 srl0 = Serial('/dev/ttyUSB0', 9600, timeout=1)
 srl1 = Serial('/dev/ttyUSB1',9600, timeout=1)
-
-srl0.write(b'M77') # try this on for kicks
+ 
+srl0.write(b'M77') # Tigerstop Uno should reply with a message
+time.sleep(1)
 rply = srl0.readline() # gets first line
-if rply == 'Tigerstop serial interface 1.2': # expected reply from Tigerstop Uno
-    calipers = srl1
-    tigerstop = srl0
-    print('Case 0')
+if rply == 'M77': # Proscale receiver is set to echo commands
+     calipers = srl0
+     tigerstop = srl1
+     print('Case 0')
 else:
-    calipers = srl0
-    tigerstop = srl1
-    print('Case 1')
-# Yes I know this isn't a good solution but it's too late to be smart...
-# Need to remember to make this more sophisticated if I increase the version number
+     calipers = srl1
+     tigerstop = srl0
+     print('Case 1')
 
 
-
+calipers = srl1
+tigerstop = srl0
 #start GUI
 #for i in range(len(cutlist)):
 #   Lb.insert(i, cutlist[i])
 #Lb.pack(expand=True, fill=tk.BOTH)
+
+reopenFlag = 0 # used for barcode entry box
 
 def moveNext():
     global index
@@ -79,7 +82,7 @@ def moveNext():
         #goButton["text"]="Next" # say "Next" after the first time
         backButton["text"]="Back"
     elif index < (Lb.size()-1):
-        index += 1 # silly python doesn't have increment ++
+        index += 1 # python doesn't have increment ++
         updateLb()
         backButton["text"]="Back"
     else:
@@ -164,20 +167,36 @@ def goTo(loc):
     tigerstop.write(bytes(('X' + str(loc) + '\n'),encoding='utf-8'))
     #send command to move over serial
     
+
+def background_task():
+    global reopenFlag
+    print("background task")
+    if reopenFlag:
+        print("reopening barcode entry box")
+        reopenFlag = 0 # reset
+        getInput() # opens dialog box
+
 def getInput():
+    global reopenFlag
     while 1==1:
         scanNumber = tk.simpledialog.askfloat('Barcode entry window', 'Scan barcode')
         if not scanNumber: # 'Cancel'
+            reopenFlag = 0
             return
         else:
-            goTo(scanNumber*25.4)
+            goTo(scanNumber)
+            reopenFlag = 1
+            tch.after(2000, background_task) # should wait 2 sec
+            return # close window and reopen
             
 def changeUnitsIn():
+    global unitFlag
     unitFlag = 1
     tigerstop.write(bytes(('G' + '20' + '\n'),encoding='utf-8'))
     print("Changing units to in")
     
 def changeUnitsMm():
+    global unitFlag
     unitFlag = 0
     tigerstop.write(bytes(('G' + '21' + '\n'),encoding='utf-8'))
     print("Changing units to mm")
@@ -263,6 +282,7 @@ class SerialReaderProtocolRaw(Protocol):
         updateLabelData(data)
 lastDel = 0
 def updateLabelData(data):
+    
     global lastDel
     time.sleep(0.1) # apparantly it needs a little time to receive all digits
     data = data.decode("utf-8")
@@ -298,6 +318,7 @@ reader.start()
 
 #launch GUI window
 tch.config(menu = menubar)
+# tch.attributes('-fullscreen',True) 
 tk.mainloop()
 
 
