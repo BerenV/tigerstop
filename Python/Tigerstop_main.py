@@ -378,5 +378,3 @@ reader.start()
 tch.config(menu = menubar)
 tch.attributes('-fullscreen',True)
 tk.mainloop()
-
-
